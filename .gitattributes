@@ -1,0 +1,18 @@
+# Normalize line endings: text files use LF in the repository.
+* text=auto
+
+# Source and config files are always LF.
+*.ts text eol=lf
+*.js text eol=lf
+*.json text eol=lf
+*.yaml text eol=lf
+*.yml text eol=lf
+*.md text eol=lf
+
+# Windows scripts keep CRLF.
+*.bat text eol=crlf
+
+# Binary assets (future logos, images).
+*.png binary
+*.jpg binary
+*.svg text

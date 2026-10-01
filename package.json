@@ -1,0 +1,59 @@
+{
+  "name": "actionwall",
+  "version": "0.1.0",
+  "description": "Security firewall for AI agents — inspect every tool call, command, file access and HTTP request against a policy before it runs.",
+  "type": "module",
+  "license": "MIT",
+  "engines": {
+    "node": ">=20"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "bin": {
+    "actionwall": "./dist/cli/index.js"
+  },
+  "files": [
+    "dist",
+    "policies",
+    "docs",
+    "README.md",
+    "CHANGELOG.md"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "demo": "tsx src/demo/mockAgent.ts",
+    "demo:block": "tsx examples/demo-block-rm-rf.ts",
+    "actionwall": "tsx src/cli/index.ts",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "ai-agents",
+    "security",
+    "firewall",
+    "llm",
+    "prompt-injection",
+    "policy-engine",
+    "tool-calls",
+    "audit-log"
+  ],
+  "dependencies": {
+    "commander": "^14.0.0",
+    "yaml": "^2.6.0",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.7.0",
+    "vitest": "^3.0.0"
+  }
+}
