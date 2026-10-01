@@ -1,0 +1,75 @@
+# ActionWall strict policy — production agents touching real infrastructure.
+# Deny-by-default tools, allowlisted domains, no access outside the workspace.
+
+version: 1
+name: strict
+description: Deny-by-default tooling and egress allowlist for production agent deployments.
+
+risk_thresholds:
+  block: [HIGH, CRITICAL]
+  ask: [MEDIUM]
+
+fail_closed: true
+
+tools:
+  default: deny
+  allow:
+    - file.read
+    - file.write
+    - file.list
+    - web.search
+    - shell
+  deny:
+    - admin.*
+    - "*delete_all*"
+    - payment.*
+  agents:
+    untrusted-intern-agent:
+      default: deny
+      allow: [file.read, web.search]   # no shell, no writes
+
+command_risk:
+  blocked_patterns:
+    - "docker\\s+system\\s+prune"
+    - "kubectl\\s+delete"
+
+file_policy:
+  max_bulk_delete: 5
+  allow_outside_workspace: false
+  protected_paths:
+    - path: "**/.env"
+      permissions: [deny]
+    - path: "~/.ssh/**"
+      permissions: [deny]
+    - path: "~/.aws/**"
+      permissions: [deny]
+    - path: "**/.git/**"
+      permissions: [deny]
+    - path: "/etc/**"
+      permissions: [deny]        # stricter than default: no reads either
+
+url_policy:
+  allowed_schemes: [https]
+  allowed_domains:
+    - api.github.com
+    - registry.npmjs.org
+    - "*.openai.com"
+    - "*.anthropic.com"
+  denied_domains:
+    - "*.torrent.example"
+  block_private_networks: true
+
+secrets:
+  enabled: true
+  scan_entropy: true
+  custom_patterns: []
+
+injection:
+  enabled: true
+  hits_for_high: 1     # in production, a single injection signal escalates
+
+audit:
+  enabled: true
+  log_dir: .actionwall/audit
+  redact_secrets: true
+  log_allowed: true

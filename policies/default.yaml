@@ -1,0 +1,70 @@
+# ActionWall default policy — balanced protection for a coding agent.
+# This file mirrors the built-in defaults; every field is optional.
+# Full reference: docs/POLICY_REFERENCE.md
+
+version: 1
+name: default
+description: Balanced baseline — normal agent work is allowed, destructive and exfiltration patterns are blocked.
+
+# Verdict mapping: which severities block, which escalate to a human.
+risk_thresholds:
+  block: [HIGH, CRITICAL]
+  ask: [MEDIUM]
+
+# Fail closed: if a scanner itself crashes, treat the action as CRITICAL.
+fail_closed: true
+
+tools:
+  default: allow          # switch to "deny" and use `allow:` for deny-by-default
+  allow: []
+  deny: []
+  # Per-agent overrides, e.g.:
+  # agents:
+  #   junior-agent:
+  #     default: deny
+  #     allow: [file.read, web.search]
+
+command_risk:
+  # Extra regexes to hard-block on shell commands, e.g. "docker\\s+system\\s+prune".
+  blocked_patterns: []
+
+file_policy:
+  max_bulk_delete: 10     # the "not allowed to delete more than 10 files automatically" rule
+  allow_outside_workspace: false
+  protected_paths:
+    - path: "**/.env"
+      permissions: [deny]
+      description: Environment files often contain live secrets
+    - path: "~/.ssh/**"
+      permissions: [deny]
+      description: SSH private keys
+    - path: "~/.aws/**"
+      permissions: [deny]
+      description: AWS credential store
+    - path: "**/.git/**"
+      permissions: [deny]
+      description: Git internals — history may hold secrets
+    - path: "/etc/**"
+      permissions: [readonly]
+      description: System configuration may be read, never modified
+
+url_policy:
+  allowed_schemes: [https]
+  allowed_domains: []     # empty = any public domain; add entries for deny-by-default
+  denied_domains: []
+  block_private_networks: true   # SSRF guard: localhost, 10.x, 169.254.169.254, …
+
+secrets:
+  enabled: true
+  scan_entropy: true
+  custom_patterns: []     # { name: internal-jira, regex: "jira_[A-Za-z0-9]{20,}", severity: HIGH }
+
+injection:
+  enabled: true
+  hits_for_high: 2        # distinct patterns in one text before HIGH
+
+audit:
+  enabled: true
+  log_dir: .actionwall/audit
+  redact_secrets: true
+  log_allowed: true

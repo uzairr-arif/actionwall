@@ -1,0 +1,58 @@
+# ActionWall readonly policy — research/analysis agents that must never
+# change anything: no shell, no writes, no deletes, read-only system paths.
+
+version: 1
+name: readonly
+description: Read-only analysis agent — cannot execute commands or mutate files.
+
+risk_thresholds:
+  block: [HIGH, CRITICAL]
+  ask: [MEDIUM]
+
+fail_closed: true
+
+tools:
+  default: deny
+  allow:
+    - file.read
+    - file.list
+    - file.search
+    - web.search
+    - http.request
+
+command_risk:
+  blocked_patterns: []
+
+file_policy:
+  max_bulk_delete: 1
+  allow_outside_workspace: false
+  protected_paths:
+    - path: "**"            # the whole filesystem is read-only for this agent
+      permissions: [readonly]
+    - path: "**/.env"
+      permissions: [deny]   # first match wins — order matters
+    - path: "~/.ssh/**"
+      permissions: [deny]
+    - path: "~/.aws/**"
+      permissions: [deny]
+
+url_policy:
+  allowed_schemes: [https]
+  allowed_domains: []
+  denied_domains: []
+  block_private_networks: true
+
+secrets:
+  enabled: true
+  scan_entropy: true
+  custom_patterns: []
+
+injection:
+  enabled: true
+  hits_for_high: 2
+
+audit:
+  enabled: true
+  log_dir: .actionwall/audit
+  redact_secrets: true
+  log_allowed: true
