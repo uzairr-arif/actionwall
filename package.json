@@ -21,7 +21,7 @@
   "files": [
     "dist",
     "policies",
-    "docs",
+    "docs/*.md",
     "README.md",
     "CHANGELOG.md"
   ],

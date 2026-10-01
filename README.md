@@ -1,4 +1,6 @@
-# 🛡️ ActionWall — Security Firewall for AI Agents
+<p align="center">
+  <img src="docs/assets/banner.svg" alt="ActionWall — Security Firewall for AI Agents" width="830">
+</p>
 
 **ActionWall is a policy firewall that sits between an AI agent and its tools.** Every tool call, shell command, file access and HTTP request an agent wants to make is inspected *before it runs* — scored against a YAML policy you control — and either **allowed**, **blocked**, or **escalated to a human**, with a tamper-evident audit log of everything.
 

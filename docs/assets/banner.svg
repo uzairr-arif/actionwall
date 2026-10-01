@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 300" role="img" aria-label="ActionWall — security firewall for AI agents">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#101b33"/>
+      <stop offset="1" stop-color="#0a1120"/>
+    </linearGradient>
+    <linearGradient id="brick" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#334155"/>
+      <stop offset="1" stop-color="#1e293b"/>
+    </linearGradient>
+    <linearGradient id="hot" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#f87171"/>
+      <stop offset="1" stop-color="#dc2626"/>
+    </linearGradient>
+    <clipPath id="shield">
+      <path d="M256 52 L432 124 V286 C432 386 356 452 256 484 C156 452 80 386 80 286 V124 Z"/>
+    </clipPath>
+  </defs>
+
+  <rect width="1200" height="300" rx="20" fill="url(#bg)"/>
+
+  <!-- icon mark (app-icon tile) -->
+  <g transform="translate(44,48) scale(0.4)">
+    <rect width="512" height="512" rx="112" fill="url(#bg)" stroke="#1e293b" stroke-width="6"/>
+    <g clip-path="url(#shield)">
+      <g fill="url(#brick)">
+        <rect x="40"  y="72" width="56" height="36" rx="7"/><rect x="104" y="72" width="56" height="36" rx="7"/><rect x="168" y="72" width="56" height="36" rx="7"/><rect x="232" y="72" width="56" height="36" rx="7"/><rect x="296" y="72" width="56" height="36" rx="7"/><rect x="360" y="72" width="56" height="36" rx="7"/><rect x="424" y="72" width="56" height="36" rx="7"/>
+        <rect x="72"  y="116" width="56" height="36" rx="7"/><rect x="136" y="116" width="56" height="36" rx="7"/><rect x="200" y="116" width="56" height="36" rx="7"/><rect x="264" y="116" width="56" height="36" rx="7"/><rect x="328" y="116" width="56" height="36" rx="7"/><rect x="392" y="116" width="56" height="36" rx="7"/>
+        <rect x="40"  y="160" width="56" height="36" rx="7"/><rect x="104" y="160" width="56" height="36" rx="7"/><rect x="168" y="160" width="56" height="36" rx="7"/><rect x="232" y="160" width="56" height="36" rx="7"/><rect x="296" y="160" width="56" height="36" rx="7"/><rect x="360" y="160" width="56" height="36" rx="7"/><rect x="424" y="160" width="56" height="36" rx="7"/>
+        <rect x="72"  y="204" width="56" height="36" rx="7"/><rect x="136" y="204" width="56" height="36" rx="7"/><rect x="200" y="204" width="56" height="36" rx="7"/><rect x="264" y="204" width="56" height="36" rx="7"/><rect x="328" y="204" width="56" height="36" rx="7"/><rect x="392" y="204" width="56" height="36" rx="7"/>
+        <rect x="40"  y="248" width="56" height="36" rx="7"/><rect x="104" y="248" width="56" height="36" rx="7"/><rect x="168" y="248" width="56" height="36" rx="7"/><rect x="232" y="248" width="56" height="36" rx="7"/><rect x="296" y="248" width="56" height="36" rx="7"/><rect x="360" y="248" width="56" height="36" rx="7"/><rect x="424" y="248" width="56" height="36" rx="7"/>
+        <rect x="72"  y="292" width="56" height="36" rx="7"/><rect x="136" y="292" width="56" height="36" rx="7"/><rect x="200" y="292" width="56" height="36" rx="7"/><rect x="328" y="292" width="56" height="36" rx="7"/><rect x="392" y="292" width="56" height="36" rx="7"/>
+        <rect x="40"  y="336" width="56" height="36" rx="7"/><rect x="104" y="336" width="56" height="36" rx="7"/><rect x="168" y="336" width="56" height="36" rx="7"/><rect x="232" y="336" width="56" height="36" rx="7"/><rect x="296" y="336" width="56" height="36" rx="7"/><rect x="360" y="336" width="56" height="36" rx="7"/><rect x="424" y="336" width="56" height="36" rx="7"/>
+        <rect x="72"  y="380" width="56" height="36" rx="7"/><rect x="136" y="380" width="56" height="36" rx="7"/><rect x="200" y="380" width="56" height="36" rx="7"/><rect x="264" y="380" width="56" height="36" rx="7"/><rect x="328" y="380" width="56" height="36" rx="7"/><rect x="392" y="380" width="56" height="36" rx="7"/>
+        <rect x="40"  y="424" width="56" height="36" rx="7"/><rect x="104" y="424" width="56" height="36" rx="7"/><rect x="168" y="424" width="56" height="36" rx="7"/><rect x="232" y="424" width="56" height="36" rx="7"/><rect x="296" y="424" width="56" height="36" rx="7"/><rect x="360" y="424" width="56" height="36" rx="7"/><rect x="424" y="424" width="56" height="36" rx="7"/>
+      </g>
+      <rect x="262" y="290" width="64" height="40" rx="8" fill="url(#hot)" transform="rotate(-6 294 310)"/>
+    </g>
+    <path d="M256 52 L432 124 V286 C432 386 356 452 256 484 C156 452 80 386 80 286 V124 Z" fill="none" stroke="#475569" stroke-width="14" stroke-linejoin="round"/>
+  </g>
+
+  <!-- wordmark -->
+  <text x="268" y="152" font-family="Segoe UI, system-ui, -apple-system, sans-serif" font-size="82" font-weight="700" fill="#f8fafc">Action<tspan fill="#f87171">Wall</tspan></text>
+  <text x="272" y="204" font-family="Segoe UI, system-ui, -apple-system, sans-serif" font-size="30" fill="#94a3b8">Security firewall for AI agents</text>
+  <text x="272" y="248" font-family="Segoe UI, system-ui, -apple-system, sans-serif" font-size="21" fill="#64748b">deterministic · explainable · fail-closed</text>
+
+  <!-- terminal card -->
+  <g>
+    <rect x="730" y="52" width="428" height="196" rx="14" fill="#0d1526" stroke="#1e293b" stroke-width="2"/>
+    <circle cx="758" cy="80" r="7" fill="#ef4444"/><circle cx="780" cy="80" r="7" fill="#f59e0b"/><circle cx="802" cy="80" r="7" fill="#22c55e"/>
+    <text x="758" y="126" font-family="Cascadia Code, Consolas, ui-monospace, monospace" font-size="18" fill="#e2e8f0">$ actionwall check "rm -rf /project/*"</text>
+    <circle cx="766" cy="160" r="7" fill="#dc2626"/>
+    <text x="782" y="167" font-family="Cascadia Code, Consolas, ui-monospace, monospace" font-size="18" font-weight="700" fill="#f87171">BLOCKED — CRITICAL</text>
+    <text x="758" y="200" font-family="Cascadia Code, Consolas, ui-monospace, monospace" font-size="15" fill="#64748b">12 files &gt; max_bulk_delete: 10</text>
+    <text x="758" y="224" font-family="Cascadia Code, Consolas, ui-monospace, monospace" font-size="15" fill="#64748b">policy: file_policy.max_bulk_delete</text>
+  </g>
+</svg>
