@@ -1,0 +1,322 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ActionWall: Security firewall for AI agents</title>
+<meta name="description" content="ActionWall inspects every action an AI agent wants to take (shell commands, file access, HTTP requests, secrets) against a policy you control, before it runs. Deterministic, explainable, fail-closed.">
+<meta property="og:title" content="ActionWall: Security firewall for AI agents">
+<meta property="og:description" content="Deterministic policy enforcement for AI agents: every tool call inspected before it runs.">
+<meta property="og:image" content="og-image.png">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%230a1120'/%3E%3Cpath d='M50 14 L82 27 V57 C82 76 67 88 50 93 C33 88 18 76 18 57 V27 Z' fill='none' stroke='%23475569' stroke-width='6'/%3E%3Crect x='46' y='52' width='13' height='9' rx='2' fill='%23dc2626' transform='rotate(-6 52 56)'/%3E%3C/svg%3E">
+<style>
+  :root {
+    --bg: #070c16; --panel: #0d1526; --panel-2: #101b33; --line: #1e293b;
+    --text: #e2e8f0; --muted: #94a3b8; --faint: #64748b;
+    --red: #f87171; --red-deep: #dc2626; --green: #4ade80; --amber: #fbbf24; --cyan: #7dd3fc;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { max-width: 100%; overflow-x: clip; }
+  html { scroll-behavior: smooth; }
+  body { background: var(--bg); color: var(--text); font: 16px/1.65 "Segoe UI", system-ui, -apple-system, sans-serif; }
+  .wrap { max-width: 1120px; margin: 0 auto; padding: 0 24px; }
+  a { color: var(--cyan); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  .mono { font-family: "Cascadia Mono", "Cascadia Code", Consolas, ui-monospace, monospace; }
+
+  /* nav */
+  nav { border-bottom: 1px solid var(--line); position: sticky; top: 0; background: rgba(7,12,22,.9); backdrop-filter: blur(8px); z-index: 10; }
+  .nav-inner { display: flex; align-items: center; gap: 12px; height: 60px; }
+  .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 18px; color: var(--text); }
+  .brand:hover { text-decoration: none; }
+  .brand .w { color: var(--red); }
+  nav .links { margin-left: auto; display: flex; gap: 26px; font-size: 14.5px; }
+  nav .links a { color: var(--muted); }
+  nav .links a:hover { color: var(--text); text-decoration: none; }
+
+  /* hero */
+  .hero { padding: 84px 0 72px; display: flex; gap: 56px; align-items: center; }
+  .hero-left { flex: 1.05; min-width: 0; }
+  .eyebrow { font-size: 12.5px; letter-spacing: .14em; text-transform: uppercase; color: var(--red); font-weight: 700; margin-bottom: 18px; }
+  h1 { font-size: 46px; line-height: 1.12; letter-spacing: -.02em; font-weight: 800; }
+  h1 .w { color: var(--red); }
+  .sub { margin: 20px 0 30px; font-size: 19px; color: var(--muted); max-width: 34em; }
+  .sub b { color: var(--text); font-weight: 600; }
+  .cta-row { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; }
+  .btn { display: inline-block; padding: 12px 22px; border-radius: 10px; font-weight: 600; font-size: 15.5px; border: 1px solid var(--line); color: var(--text); }
+  .btn:hover { text-decoration: none; border-color: #334155; }
+  .btn.primary { background: var(--red-deep); border-color: var(--red-deep); color: #fff; }
+  .btn.primary:hover { background: #b91c1c; }
+  .npm-chip { margin-top: 26px; display: inline-flex; align-items: center; gap: 12px; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 12px 18px; font-size: 14.5px; color: var(--muted); }
+  .npm-chip code { color: var(--text); }
+
+  /* terminal card (hero right) */
+  .term { flex: 1; min-width: 380px; background: var(--panel); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; box-shadow: 0 24px 60px rgba(0,0,0,.45); }
+  .term-bar { height: 38px; background: var(--panel-2); border-bottom: 1px solid var(--line); display: flex; align-items: center; padding: 0 16px; gap: 8px; }
+  .term-bar i { width: 11px; height: 11px; border-radius: 50%; }
+  .term-bar i:nth-child(1){background:#ef4444}.term-bar i:nth-child(2){background:#f59e0b}.term-bar i:nth-child(3){background:#22c55e}
+  .term-bar span { margin-left: 10px; font-size: 12.5px; color: var(--faint); }
+  .term-body { padding: 20px 22px; font-family: "Cascadia Mono", "Cascadia Code", Consolas, ui-monospace, monospace; font-size: 13.5px; line-height: 1.75; color: var(--text); }
+  .term-body .row { display: flex; gap: 10px; align-items: baseline; opacity: 0; animation: reveal .45s ease forwards; }
+  .term-body .idx { color: var(--faint); width: 30px; flex: none; }
+  .term-body .lbl { color: #cbd5e1; flex: 1; }
+  .term-body .rule { color: var(--faint); font-size: 11.5px; white-space: nowrap; }
+  .term-body .verdict { width: 112px; text-align: right; flex: none; font-weight: 700; }
+  .g { color: var(--green); } .r { color: var(--red); } .a { color: var(--amber); }
+  .cmd { color: var(--faint); } .cmd b { color: var(--text); font-weight: 600; }
+  @keyframes reveal { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+
+  /* sections */
+  section { padding: 76px 0; border-top: 1px solid var(--line); }
+  .sec-eyebrow { font-size: 12.5px; letter-spacing: .14em; text-transform: uppercase; color: var(--red); font-weight: 700; margin-bottom: 14px; }
+  h2 { font-size: 32px; letter-spacing: -.015em; font-weight: 750; margin-bottom: 12px; }
+  .sec-sub { color: var(--muted); max-width: 46em; margin-bottom: 44px; font-size: 17px; }
+
+  .cards3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+  .cards3 > *, .qs-grid > *, .docs-grid > *, .example-grid > *, .principles > * { min-width: 0; }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 26px; }
+  .card .glyph { font-size: 22px; margin-bottom: 14px; display: block; }
+  .card h3 { font-size: 17.5px; margin-bottom: 8px; font-weight: 700; }
+  .card p { color: var(--muted); font-size: 14.5px; }
+
+  /* pipeline */
+  .pipe { display: flex; align-items: stretch; gap: 0; margin-top: 10px; }
+  .pipe .node { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 22px; flex: 1; }
+  .pipe .node h4 { font-size: 15px; margin-bottom: 6px; }
+  .pipe .node p { font-size: 13.5px; color: var(--muted); }
+  .pipe .arrow { align-self: center; padding: 0 14px; color: var(--faint); font-size: 22px; flex: none; }
+  .pipe .firewall { border-color: #7f1d1d; background: linear-gradient(180deg, #17101d, #0d1526); }
+  .pipe .firewall h4 { color: var(--red); }
+  .pipe ul { list-style: none; margin-top: 10px; }
+  .pipe li { font-size: 13px; color: var(--muted); padding: 3px 0; border-top: 1px dashed #182236; }
+  .verdicts { display: flex; gap: 12px; margin-top: 26px; flex-wrap: wrap; }
+  .chip { padding: 8px 18px; border-radius: 999px; border: 1.5px solid; font-weight: 700; font-size: 14px; }
+  .chip.allow { color: var(--green); border-color: #14532d; }
+  .chip.ask { color: var(--amber); border-color: #78350f; }
+  .chip.block { color: var(--red); border-color: #7f1d1d; }
+
+  /* example */
+  .example-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; align-items: start; }
+  .example-grid .note { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 26px; }
+  .example-grid .note p { color: var(--muted); font-size: 15px; margin-top: 10px; }
+  .example-grid .note b { color: var(--text); }
+  .k { color: var(--red); font-weight: 700; }
+
+  /* principles */
+  .principles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+  .p-card { border: 1px solid var(--line); border-radius: 14px; padding: 22px 24px; background: var(--panel); }
+  .p-card h4 { font-size: 15.5px; margin-bottom: 6px; }
+  .p-card p { font-size: 13.5px; color: var(--muted); }
+  .p-card h4 span { color: var(--red); margin-right: 8px; }
+
+  /* quickstart */
+  pre { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 20px 24px; font-size: 14px; line-height: 1.7; overflow-x: auto; margin-bottom: 16px; }
+  pre .c { color: var(--faint); } pre .p1 { color: var(--faint); }
+  .qs-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+
+  /* docs cards */
+  .docs-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+  .doc-card { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 22px 24px; color: var(--text); display: block; }
+  .doc-card:hover { border-color: #334155; text-decoration: none; }
+  .doc-card h4 { font-size: 15.5px; margin-bottom: 6px; color: var(--cyan); }
+  .doc-card p { font-size: 13.5px; color: var(--muted); }
+
+  footer { border-top: 1px solid var(--line); padding: 40px 0 60px; color: var(--faint); font-size: 14px; }
+  footer .wrap { display: flex; gap: 24px; align-items: center; flex-wrap: wrap; }
+  footer .spacer { flex: 1; }
+
+  @media (max-width: 940px) {
+    .hero { flex-direction: column; padding-top: 56px; }
+    .term { min-width: 0; width: 100%; }
+    .cards3, .principles, .docs-grid { grid-template-columns: 1fr; }
+    .example-grid, .qs-grid { grid-template-columns: 1fr; }
+    .pipe { flex-direction: column; }
+    .pipe .arrow { transform: rotate(90deg); padding: 8px 0; }
+    h1 { font-size: 36px; }
+    nav .links { display: none; }
+  }
+  @media (max-width: 560px) {
+    h1 { font-size: 30px; }
+    .term-body { font-size: 12px; overflow-x: auto; }
+    .term-body .rule { display: none; }
+    .term-body .verdict { width: 96px; }
+    .npm-chip { font-size: 12.5px; flex-wrap: wrap; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="wrap nav-inner">
+    <a class="brand" href="#top">
+      <svg width="26" height="26" viewBox="0 0 100 100" aria-hidden="true"><rect width="100" height="100" rx="22" fill="#0a1120"/><path d="M50 14 L82 27 V57 C82 76 67 88 50 93 C33 88 18 76 18 57 V27 Z" fill="none" stroke="#475569" stroke-width="6"/><rect x="46" y="52" width="13" height="9" rx="2" fill="#dc2626" transform="rotate(-6 52 56)"/></svg>
+      <span>Action<span class="w">Wall</span></span>
+    </a>
+    <div class="links">
+      <a href="#why">Why</a>
+      <a href="#how">How it works</a>
+      <a href="#scanners">Scanners</a>
+      <a href="#quickstart">Quickstart</a>
+      <a href="https://github.com/uzairr-arif/actionwall">GitHub</a>
+    </div>
+  </div>
+</nav>
+
+<header class="wrap hero" id="top">
+  <div class="hero-left">
+    <div class="eyebrow">Security firewall for AI agents</div>
+    <h1>The wall between an AI agent and its <span class="w">actions</span>.</h1>
+    <p class="sub">
+      Agents can run shell commands, touch files, and call the internet.
+      ActionWall inspects <b>every action before it executes</b> against a YAML policy
+      you control, and returns <b class="g">ALLOW</b>, <b class="a">ASK&nbsp;HUMAN</b> or
+      <b class="r">BLOCK</b>, with a tamper-evident audit trail.
+    </p>
+    <div class="cta-row">
+      <a class="btn primary" href="#quickstart">Get started</a>
+      <a class="btn" href="#how">How it works</a>
+    </div>
+    <div class="npm-chip mono"><code>npm install actionwall</code><span>· MIT · TypeScript · Node ≥ 20</span></div>
+  </div>
+
+  <div class="term" aria-label="Example ActionWall demo output">
+    <div class="term-bar"><i></i><i></i><i></i><span>actionwall · agent terminal</span></div>
+    <div class="term-body">
+      <div class="row cmd" style="animation-delay:.05s"><b>$ actionwall demo</b></div>
+      <div class="row" style="animation-delay:.15s"><span class="idx">1/9</span><span class="lbl">Read the project README</span><span class="verdict g">● ALLOWED</span></div>
+      <div class="row" style="animation-delay:.25s"><span class="idx">2/9</span><span class="lbl">Run the test suite (npm test)</span><span class="verdict g">● ALLOWED</span></div>
+      <div class="row" style="animation-delay:.35s"><span class="idx">3/9</span><span class="lbl">Fetch repo metadata from the GitHub API</span><span class="verdict g">● ALLOWED</span></div>
+      <div class="row" style="animation-delay:.45s"><span class="idx">4/9</span><span class="lbl">Call third-party API with leaked key</span><span class="rule">SEC-OPENAI-KEY</span><span class="verdict r">● BLOCKED</span></div>
+      <div class="row" style="animation-delay:.55s"><span class="idx">5/9</span><span class="lbl">Read environment variables (.env)</span><span class="rule">CMD-SECRET-FILE-READ</span><span class="verdict r">● BLOCKED</span></div>
+      <div class="row" style="animation-delay:.65s"><span class="idx">6/9</span><span class="lbl">Fetch cloud metadata (SSRF)</span><span class="rule">URL-METADATA</span><span class="verdict r">● BLOCKED</span></div>
+      <div class="row" style="animation-delay:.75s"><span class="idx">7/9</span><span class="lbl">Read the user's SSH private key</span><span class="rule">FP-PROTECTED-READ</span><span class="verdict r">● BLOCKED</span></div>
+      <div class="row" style="animation-delay:.85s"><span class="idx">8/9</span><span class="lbl">Page content contains prompt injection</span><span class="rule">INJ-SINGLE-PATTERN</span><span class="verdict a">◆ ASK HUMAN</span></div>
+      <div class="row" style="animation-delay:.95s"><span class="idx">9/9</span><span class="lbl">Clean up the whole project (rm -rf)</span><span class="rule">CMD-RM-BULK-DELETE</span><span class="verdict r">● BLOCKED</span></div>
+    </div>
+  </div>
+</header>
+
+<section id="why">
+  <div class="wrap">
+    <div class="sec-eyebrow">Why</div>
+    <h2>Guardrails inside the model are probabilistic.<br>Actions need deterministic control.</h2>
+    <p class="sec-sub">Prompt-injection classifiers judge <em>words</em>. But the damage an agent can do happens through <em>actions</em>, and an action either violates your policy or it doesn't.</p>
+    <div class="cards3">
+      <div class="card"><span class="glyph">🎭</span><h3>Agents follow instructions from content</h3><p>A web page, an issue, or a file the agent reads can carry injected instructions. Some get through any classifier. The resulting <em>action</em> is the reliable place to stop them.</p></div>
+      <div class="card"><span class="glyph">💣</span><h3>One hallucinated command is enough</h3><p><code class="mono">rm -rf</code> with the wrong glob, a credential pasted into a tool call, a request to cloud metadata: agents don't need to be malicious to be destructive.</p></div>
+      <div class="card"><span class="glyph">🕵️</span><h3>"Trust me" isn't an audit trail</h3><p>After an incident you need to know exactly what ran, what was blocked, and why. ActionWall logs every decision, hash-chained and verifiable.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="how">
+  <div class="wrap">
+    <div class="sec-eyebrow">How it works</div>
+    <h2>One function between the agent and its tools</h2>
+    <p class="sec-sub">Integrate in any tool-calling loop: OpenAI, Anthropic, LangChain, your own framework. If it can build an action object, ActionWall can gate it.</p>
+    <div class="pipe">
+      <div class="node"><h4>AI Agent</h4><p>wants to execute an action</p><p class="mono" style="margin-top:8px; color:#64748b;">rm -rf /project/*</p></div>
+      <div class="arrow">→</div>
+      <div class="node firewall"><h4>ActionWall</h4><p>runs six scanners against your policy</p>
+        <ul>
+          <li>Tool permissions</li><li>Command risk analysis</li><li>File access policy</li>
+          <li>Secret detection</li><li>URL / domain policy &amp; SSRF guard</li><li>Prompt-injection heuristics</li>
+        </ul>
+      </div>
+      <div class="arrow">→</div>
+      <div class="node"><h4>Decision</h4><p>severity → verdict, per your thresholds</p>
+        <div class="verdicts" style="margin-top:14px">
+          <span class="chip allow">ALLOW</span><span class="chip ask">ASK HUMAN</span><span class="chip block">BLOCK</span>
+        </div>
+      </div>
+      <div class="arrow">→</div>
+      <div class="node"><h4>Tools / Internet</h4><p>only if the firewall allows it</p><p style="margin-top:8px">Every decision is appended to a hash-chained audit log.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="scanners">
+  <div class="wrap">
+    <div class="sec-eyebrow">The headline rule</div>
+    <h2>"Destructive" isn't an opinion. It's a number.</h2>
+    <p class="sec-sub">ActionWall doesn't pattern-match the word <em>rm</em>. It expands the target against the real filesystem (read-only, bounded) and <b>counts what would actually be deleted</b>.</p>
+    <div class="example-grid">
+      <div class="term"><div class="term-bar"><i></i><i></i><i></i><span>actionwall · check</span></div>
+        <div class="term-body">
+          <div class="row cmd"><b>$ actionwall check "rm -rf /project/*"</b></div>
+          <div class="row"><span class="verdict r">🔴 BLOCKED · CRITICAL</span></div>
+          <div class="row"><span class="lbl" style="color:#94a3b8">rm would delete <b class="r">12 files</b>; policy allows at most</span></div>
+          <div class="row"><span class="lbl" style="color:#94a3b8"><b class="r">10</b> automatic deletions.</span></div>
+          <div class="row"><span class="lbl" style="color:#64748b">policy: file_policy.max_bulk_delete</span></div>
+        </div>
+      </div>
+      <div class="note">
+        <h3 style="margin-bottom:4px">Measured blast radius</h3>
+        <p>Same intent, different verdicts: deleting <b>5 build artifacts</b> is normal work; deleting <b>12 project files</b> breaches <span class="mono k">file_policy.max_bulk_delete</span>. The policy knob is yours; the measurement is the firewall's.</p>
+        <p>Beyond the bulk limit: protected paths (<span class="mono">.env</span>, <span class="mono">~/.ssh/**</span>, <span class="mono">.git/**</span>), workspace containment with traversal-proof normalization, SSRF guards for cloud metadata endpoints, credential signatures + entropy detection with automatic redaction, and per-agent tool policies.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="sec-eyebrow">Principles</div>
+    <h2>Engineered like a firewall, not a filter</h2>
+    <p class="sec-sub">The design decisions are documented and defensible. Every one of them is in <a href="https://github.com/uzairr-arif/actionwall/blob/main/docs/ARCHITECTURE.md">docs/ARCHITECTURE.md</a>.</p>
+    <div class="principles">
+      <div class="p-card"><h4><span>●</span>Fail-closed by default</h4><p>If a scanner crashes, the action is blocked. Opening the firewall is always an explicit, greppable policy flag.</p></div>
+      <div class="p-card"><h4><span>●</span>Never executes, never phones home</h4><p>Zero network calls, zero command execution inside the firewall. Filesystem access is read-only and bounded.</p></div>
+      <div class="p-card"><h4><span>●</span>~1–5 ms per decision</h4><p>Deterministic rules, not model calls. Latency your agent's tool loop won't feel.</p></div>
+      <div class="p-card"><h4><span>●</span>Policy-as-code</h4><p>YAML policies, zod-validated, with a <span class="mono">validate</span> command and CI-friendly exit codes (0 / 1 / 3 / 2).</p></div>
+      <div class="p-card"><h4><span>●</span>Tamper-evident audit</h4><p>Every decision is a SHA-256 hash-chained record. <span class="mono">actionwall log --verify</span> proves the trail is intact.</p></div>
+      <div class="p-card"><h4><span>●</span>Honest about limits</h4><p>Heuristics are bypassable; this is a policy gate, not a sandbox. The threat model says exactly where the walls are.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="quickstart">
+  <div class="wrap">
+    <div class="sec-eyebrow">Quickstart</div>
+    <h2>Running in two minutes</h2>
+    <div class="qs-grid">
+      <div>
+        <pre class="mono"><span class="c"># inspect any action before it runs</span>
+<span class="p1">$</span> actionwall check "sudo chmod 777 /etc/hosts"
+<span class="p1">$</span> actionwall check '{"tool":"http.request",
+    "params":{"url":"http://169.254.169.254/"}}'
+
+<span class="c"># watch the scripted demo agent</span>
+<span class="p1">$</span> actionwall demo</pre>
+      </div>
+      <div>
+        <pre class="mono"><span class="c">// integrate in any tool-calling loop</span>
+import { ShieldEngine, loadPolicy, makeAction } from "actionwall";
+
+const engine = new ShieldEngine(loadPolicy());
+const decision = engine.check(
+  makeAction({ tool: "shell",
+               params: { command: "rm -rf build/*" } })
+);
+if (decision.verdict === "BLOCK") throw new Error(decision.summary);</pre>
+      </div>
+    </div>
+    <div class="docs-grid">
+      <a class="doc-card" href="https://github.com/uzairr-arif/actionwall/blob/main/docs/POLICY_REFERENCE.md"><h4>Policies →</h4><p>Three presets (default / strict / readonly) and every policy field documented.</p></a>
+      <a class="doc-card" href="https://github.com/uzairr-arif/actionwall/blob/main/docs/THREAT_MODEL.md"><h4>Threat model →</h4><p>STRIDE analysis, OWASP LLM Top-10 mapping, and the limits we admit to.</p></a>
+      <a class="doc-card" href="https://github.com/uzairr-arif/actionwall/blob/main/docs/ARCHITECTURE.md"><h4>Architecture →</h4><p>The scanner contract, design decisions, and how to add your own scanners.</p></a>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <span>Action<span style="color:var(--red)">Wall</span> is MIT licensed open source.</span>
+    <span class="spacer"></span>
+    <a href="https://github.com/uzairr-arif/actionwall">GitHub</a>
+    <a href="https://www.npmjs.com/package/actionwall">npm</a>
+  </div>
+</footer>
+
+</body>
+</html>
