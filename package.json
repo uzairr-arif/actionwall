@@ -18,6 +18,14 @@
   "bin": {
     "actionwall": "./dist/cli/index.js"
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/uzairr-arif/actionwall.git"
+  },
+  "bugs": {
+    "url": "https://github.com/uzairr-arif/actionwall/issues"
+  },
+  "homepage": "https://github.com/uzairr-arif/actionwall#readme",
   "files": [
     "dist",
     "policies",

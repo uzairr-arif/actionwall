@@ -2,6 +2,13 @@
   <img src="docs/assets/banner.svg" alt="ActionWall — Security Firewall for AI Agents" width="830">
 </p>
 
+<p align="center">
+  <a href="https://github.com/uzairr-arif/actionwall/actions/workflows/ci.yml"><img src="https://github.com/uzairr-arif/actionwall/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-green.svg" alt="MIT license"></a>
+  <img src="https://img.shields.io/badge/node-%3E%3D20-blue.svg" alt="Node ≥ 20">
+  <img src="https://img.shields.io/badge/tests-76%20passing-brightgreen.svg" alt="76 tests passing">
+</p>
+
 **ActionWall is a policy firewall that sits between an AI agent and its tools.** Every tool call, shell command, file access and HTTP request an agent wants to make is inspected *before it runs* — scored against a YAML policy you control — and either **allowed**, **blocked**, or **escalated to a human**, with a tamper-evident audit log of everything.
 
 ```
@@ -182,6 +189,15 @@ tests/           76 unit & integration tests (vitest)
 examples/        demo-block-rm-rf.ts · guarded-agent.ts (integration pattern)
 policies/        default · strict · readonly
 ```
+
+## Community
+
+| | |
+|---|---|
+| **Contributing** | [CONTRIBUTING.md](CONTRIBUTING.md) — dev setup, ground rules, and how to add a scanner |
+| **Security** | [SECURITY.md](SECURITY.md) — responsible disclosure (please don't open public issues for exploitable bypasses) |
+| **Changelog** | [CHANGELOG.md](CHANGELOG.md) — Keep-a-Changelog format |
+| **Roadmap** | [docs/ROADMAP.md](docs/ROADMAP.md) — HTTP service mode, MCP guard, ML classifier, approvals workflow |
 
 ## License
 
