@@ -4,6 +4,8 @@
 
 <p align="center">
   <a href="https://github.com/uzairr-arif/actionwall/actions/workflows/ci.yml"><img src="https://github.com/uzairr-arif/actionwall/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+  <a href="https://www.npmjs.com/package/actionwall"><img src="https://img.shields.io/npm/v/actionwall.svg" alt="npm version"></a>
+  <a href="https://www.npmjs.com/package/actionwall"><img src="https://img.shields.io/npm/dm/actionwall.svg" alt="npm downloads"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-green.svg" alt="MIT license"></a>
   <img src="https://img.shields.io/badge/node-%3E%3D20-blue.svg" alt="Node ≥ 20">
   <img src="https://img.shields.io/badge/tests-76%20passing-brightgreen.svg" alt="76 tests passing">
@@ -65,7 +67,7 @@ npm run build && npm test        # 76 tests
 npx tsx src/cli/index.ts check "sudo chmod 777 /etc/hosts" --no-log
 ```
 
-**Installation:** the project currently installs from source (clone → `npm install` → `npm run build`). An npm package release is planned — the package is already publish-ready (bin, exports, type declarations). See [docs/COMPARISON.md](docs/COMPARISON.md) for how ActionWall relates to Llama Guard, NeMo Guardrails, Agent-Wall and other tools in this space.
+**Installation:** `npm install actionwall` (CLI included — or try it without installing: `npx actionwall demo`). From source: clone, `npm install`, `npm run build`. See [docs/COMPARISON.md](docs/COMPARISON.md) for how ActionWall relates to Llama Guard, NeMo Guardrails, Agent-Wall and other tools in this space.
 
 ### Use it from Node
 
