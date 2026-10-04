@@ -16,7 +16,7 @@
     }
   },
   "bin": {
-    "actionwall": "./dist/cli/index.js"
+    "actionwall": "dist/cli/index.js"
   },
   "repository": {
     "type": "git",
