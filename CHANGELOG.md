@@ -3,6 +3,12 @@
 All notable changes to this project are documented here.
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.1.1] - 2026-10-04
+
+### Changed
+- `homepage` metadata points to the product landing page (https://uzairr-arif.github.io/actionwall/) instead of duplicating the repository URL.
+- commander updated to 15; dependency lockfile refreshed within semver ranges. Major bumps of typescript (7), vitest (5), zod (4) and @types/node (26) are deliberately held back for dedicated testing.
+
 ## [0.1.0] — 2026-09-14
 
 ### Added

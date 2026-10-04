@@ -1,6 +1,6 @@
 {
   "name": "actionwall",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Security firewall for AI agents — inspect every tool call, command, file access and HTTP request against a policy before it runs.",
   "type": "module",
   "license": "MIT",
@@ -25,7 +25,7 @@
   "bugs": {
     "url": "https://github.com/uzairr-arif/actionwall/issues"
   },
-  "homepage": "https://github.com/uzairr-arif/actionwall#readme",
+  "homepage": "https://uzairr-arif.github.io/actionwall/",
   "files": [
     "dist",
     "policies",
@@ -54,7 +54,7 @@
     "audit-log"
   ],
   "dependencies": {
-    "commander": "^14.0.0",
+    "commander": "^15.0.0",
     "yaml": "^2.6.0",
     "zod": "^3.24.1"
   },

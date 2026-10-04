@@ -1,6 +1,6 @@
 # ActionWall — Requirements Specification
 
-Version 1.0 · Status: implemented (v0.1.0) · Identified functional and non-functional requirements, each with acceptance criteria mapped to the test suite.
+Version 1.0 · Status: implemented (v0.1.1) · Identified functional and non-functional requirements, each with acceptance criteria mapped to the test suite.
 
 ## 1. Problem statement
 
@@ -72,7 +72,7 @@ AI agents execute tools autonomously: shell commands, file writes, HTTP requests
 | NFR-5 | **Portability:** Linux, macOS, Windows (drive-letter normalization, home expansion). | Tests run on Windows; CI matrix. |
 | NFR-6 | **Dependency hygiene:** 3 runtime dependencies (commander, yaml, zod), zero for the core engine. | package.json. |
 | NFR-7 | **Explainability:** every finding carries ruleId, human-readable reason, and the policy reference that triggered it. | All scanner tests. |
-| NFR-8 | **Test coverage:** every scanner, the engine, audit, policy loader, and CLI have automated tests (76 as of v0.1.0). | `npm test`. |
+| NFR-8 | **Test coverage:** every scanner, the engine, audit, policy loader, and CLI have automated tests (76 as of v0.1.1). | `npm test`. |
 
 ## 5. Personas
 
