@@ -1,10 +1,14 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import type { AddressInfo } from "node:net";
+import { createRequire } from "node:module";
 import * as path from "node:path";
 import { fileURLToPath } from "node:url";
 import { createActionWallServer, type ServeOptions } from "../src/server/serve.js";
 import { loadPolicy } from "../src/core/policy.js";
 import type { Decision } from "../src/core/types.js";
+
+const require = createRequire(import.meta.url);
+const { version: PACKAGE_VERSION } = require("../package.json") as { version: string };
 
 let server: ReturnType<typeof createActionWallServer>;
 let base = "";
@@ -46,7 +50,7 @@ describe("actionwall serve", () => {
     const json = (await res.json()) as { ok: boolean; name: string; version: string };
     expect(json.ok).toBe(true);
     expect(json.name).toBe("actionwall");
-    expect(json.version).toBe("0.1.1");
+    expect(json.version).toBe(PACKAGE_VERSION);
   });
 
   it("returns an ALLOW decision for a clean action", async () => {
