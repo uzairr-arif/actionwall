@@ -1,6 +1,6 @@
 {
   "name": "actionwall",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "Security firewall for AI agents — inspect every tool call, command, file access and HTTP request against a policy before it runs.",
   "type": "module",
   "license": "MIT",
