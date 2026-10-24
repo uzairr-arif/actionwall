@@ -1,4 +1,4 @@
-# ActionWall — Threat Model
+# ActionWall: Threat Model
 
 Scope: an AI agent (LLM-driven) running on a developer workstation or a server, executing tools autonomously. ActionWall is the enforcement point between the agent and its tools.
 
@@ -14,10 +14,10 @@ Scope: an AI agent (LLM-driven) running on a developer workstation or a server, 
 
 ## 2. Adversaries
 
-1. **Remote attacker via content** — crafts a web page, file, issue, or email whose *content* the agent will read; goal: prompt-inject the agent into harmful actions (OWASP LLM01).
-2. **Compromised dependency/tool** — an MCP server or npm package the agent uses misbehaves or exfiltrates.
-3. **Confused/degraded agent** — not malicious, just wrong: hallucinated paths, over-broad globs, wrong environment (prod vs dev).
-4. **Local attacker with user-level code execution** — can already do most damage directly; ActionWall's audit log still raises forensics cost (but see Limitations L7).
+1. **Remote attacker via content**: crafts a web page, file, issue, or email whose *content* the agent will read; goal: prompt-inject the agent into harmful actions (OWASP LLM01).
+2. **Compromised dependency/tool**: an MCP server or npm package the agent uses misbehaves or exfiltrates.
+3. **Confused/degraded agent**: not malicious, just wrong: hallucinated paths, over-broad globs, wrong environment (prod vs dev).
+4. **Local attacker with user-level code execution**: can already do most damage directly; ActionWall's audit log still raises forensics cost (but see Limitations L7).
 
 ## 3. Attack scenarios → controls
 
@@ -54,7 +54,7 @@ Scope: an AI agent (LLM-driven) running on a developer workstation or a server, 
 
 | OWASP item | ActionWall coverage |
 |---|---|
-| LLM01 Prompt Injection | injection scanner (heuristics) + the entire deny/confirm pipeline; **detection ≠ prevention** — see L1 |
+| LLM01 Prompt Injection | injection scanner (heuristics) + the entire deny/confirm pipeline; **detection ≠ prevention**, see L1 |
 | LLM02 Sensitive Information Disclosure | secrets scanner, protected paths, redacted audit |
 | LLM03 Supply Chain | tool permission lists; a compromised tool still runs *inside* policy |
 | LLM04 Data & Model Poisoning | out of scope (training-time) |
@@ -67,14 +67,14 @@ Scope: an AI agent (LLM-driven) running on a developer workstation or a server, 
 
 ## 6. Honest limitations
 
-- **L1 — Heuristics are bypassable.** Paraphrased, multilingual, or steganographic injections will pass pattern matching. ActionWall's answer is *defense in depth*: even a successful injection still has to get the resulting *action* past the command/file/URL/secret scanners. Planned: pluggable LLM classifier.
-- **L2 — Shell emulation is bounded.** The tokenizer doesn't model expansion semantics (`$IFS`, brace expansion, aliases, heredocs). Residual ambiguity is handled conservatively (substitution/eval rules), not perfectly.
-- **L3 — Counting is bounded, not exact.** The bulk-delete walk caps at 5000 entries; beyond the cap it's a lower bound (reported as "5000+"), which is fine — the rule only needs "is it over 10".
-- **L4 — Race conditions.** A file could appear between counting and deletion. ActionWall is a gate, not a transactional FS layer.
-- **L5 — TOCTOU on decisions.** What the agent does *after* an ALLOW (e.g. writes a script, then a later action runs it) is only caught when that later action is checked.
-- **L6 — No OS-level guarantees.** This is policy enforcement in process. Pair with containers, users, seccomp for hard isolation.
-- **L7 — Audit chain is tamper-evident, not tamper-proof.** A full-file rewrite with recomputed hashes is detectable only with an external anchor (remote sink / signing) — ROADMAP.
-- **L8 — Unicode tricks.** Zero-width characters are flagged; homoglyph substitution is not (too noisy for a default rule).
+- **L1: Heuristics are bypassable.** Paraphrased, multilingual, or steganographic injections will pass pattern matching. ActionWall's answer is *defense in depth*: even a successful injection still has to get the resulting *action* past the command/file/URL/secret scanners. Planned: pluggable LLM classifier.
+- **L2: Shell emulation is bounded.** The tokenizer doesn't model expansion semantics (`$IFS`, brace expansion, aliases, heredocs). Residual ambiguity is handled conservatively (substitution/eval rules), not perfectly.
+- **L3: Counting is bounded, not exact.** The bulk-delete walk caps at 5000 entries; beyond the cap it's a lower bound (reported as "5000+"), which is fine, since the rule only needs "is it over 10".
+- **L4: Race conditions.** A file could appear between counting and deletion. ActionWall is a gate, not a transactional FS layer.
+- **L5: TOCTOU on decisions.** What the agent does *after* an ALLOW (e.g. writes a script, then a later action runs it) is only caught when that later action is checked.
+- **L6: No OS-level guarantees.** This is policy enforcement in process. Pair with containers, users, seccomp for hard isolation.
+- **L7: Audit chain is tamper-evident, not tamper-proof.** A full-file rewrite with recomputed hashes is detectable only with an external anchor (remote sink / signing); see ROADMAP.
+- **L8: Unicode tricks.** Zero-width characters are flagged; homoglyph substitution is not (too noisy for a default rule).
 
 ## 7. Deployment guidance (defense in depth)
 

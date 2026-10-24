@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="docs/assets/banner.svg" alt="ActionWall — Security Firewall for AI Agents" width="830">
+  <img src="docs/assets/banner.svg" alt="ActionWall: Security Firewall for AI Agents" width="830">
 </p>
 
 <p align="center">
@@ -11,7 +11,7 @@
   <img src="https://img.shields.io/badge/tests-76%20passing-brightgreen.svg" alt="76 tests passing">
 </p>
 
-**ActionWall is a policy firewall that sits between an AI agent and its tools.** Every tool call, shell command, file access and HTTP request an agent wants to make is inspected *before it runs* — scored against a YAML policy you control — and either **allowed**, **blocked**, or **escalated to a human**, with a tamper-evident audit log of everything.
+**ActionWall is a policy firewall that sits between an AI agent and its tools.** Every tool call, shell command, file access and HTTP request an agent wants to make is inspected *before it runs*, scored against a YAML policy you control, and either **allowed**, **blocked**, or **escalated to a human**, with a tamper-evident audit log of everything.
 
 ```
    AI Agent
@@ -41,7 +41,7 @@ $ actionwall check "rm -rf /project/*"
 ```
 
 ```
-🔴 BLOCKED — Destructive filesystem operation
+🔴 BLOCKED · Destructive filesystem operation
    Tool: shell · Agent: cli-agent · Risk: CRITICAL · 3.2ms
    Findings:
    🔴 [CMD-RM-BULK-DELETE] Destructive filesystem operation (commandRisk)
@@ -49,9 +49,9 @@ $ actionwall check "rm -rf /project/*"
      (file_policy.max_bulk_delete).
 ```
 
-**Reason:** destructive filesystem operation. **Policy:** *the agent is not allowed to delete more than 10 files automatically* — the firewall actually counted the files the glob would remove before letting anything run.
+**Reason:** destructive filesystem operation. **Policy:** *the agent is not allowed to delete more than 10 files automatically*. The firewall actually counted the files the glob would remove before letting anything run.
 
-See it live with a full scripted agent (9 actions — 3 allowed, 1 escalated to a human, 5 blocked):
+See it live with a full scripted agent (9 actions: 3 allowed, 1 escalated to a human, 5 blocked):
 
 ```bash
 npx tsx src/cli/index.ts demo     # or: npm run demo
@@ -67,7 +67,7 @@ npm run build && npm test        # 76 tests
 npx tsx src/cli/index.ts check "sudo chmod 777 /etc/hosts" --no-log
 ```
 
-**Installation:** `npm install actionwall` (CLI included — or try it without installing: `npx actionwall demo`). From source: clone, `npm install`, `npm run build`. See [docs/COMPARISON.md](docs/COMPARISON.md) for how ActionWall relates to Llama Guard, NeMo Guardrails, Agent-Wall and other tools in this space.
+**Installation:** `npm install actionwall` (CLI included, or try it without installing: `npx actionwall demo`). From source: clone, `npm install`, `npm run build`. See [docs/COMPARISON.md](docs/COMPARISON.md) for how ActionWall relates to Llama Guard, NeMo Guardrails, Agent-Wall and other tools in this space.
 
 ### Use it from Node
 
@@ -90,7 +90,7 @@ try {
 }
 ```
 
-Every action is a plain object, so this wraps **any** agent framework — you call `engine.check()` (or the `guard()` convenience) right before your tool executor runs. See [examples/guarded-agent.ts](examples/guarded-agent.ts).
+Every action is a plain object, so this wraps **any** agent framework: you call `engine.check()` (or the `guard()` convenience) right before your tool executor runs. See [examples/guarded-agent.ts](examples/guarded-agent.ts).
 
 ### CLI
 
@@ -100,6 +100,7 @@ Every action is a plain object, so this wraps **any** agent framework — you ca
 | `actionwall validate --policy p.yaml` | Validate a policy file. |
 | `actionwall log --last 10` | Show recent audit entries. |
 | `actionwall log --verify` | Verify the audit log's SHA-256 hash chain. |
+| `actionwall serve --port 8080` | Run as an HTTP policy service (`POST /v1/check`, per-tenant policies). |
 | `actionwall demo` | Run the scripted protected agent end-to-end. |
 
 ---
@@ -111,7 +112,7 @@ Every action is a plain object, so this wraps **any** agent framework — you ca
 | **Tool permissions** | tool on deny-list, deny-by-default allowlist violations | BLOCK / ASK |
 | **Command risk** | `rm -rf /`, `curl … \| sh`, reverse shells, fork bombs, `dd of=/dev/…`, `sudo`, `env` dumps, `eval`, bulk deletes > limit | BLOCK / ASK |
 | **File access policy** | reads of `.env` / `~/.ssh/**`, writes to `/etc/**`, deletions outside the workspace, path traversal, bulk deletion | BLOCK |
-| **Secret detection** | AWS/GitHub/OpenAI/Stripe/Slack tokens, private keys, JWTs, credential assignments, high-entropy unknown tokens — always **redacted** in logs | BLOCK |
+| **Secret detection** | AWS/GitHub/OpenAI/Stripe/Slack tokens, private keys, JWTs, credential assignments, high-entropy unknown tokens, always **redacted** in logs | BLOCK |
 | **URL / domain policy** | cloud metadata endpoints (`169.254.169.254`), localhost/private ranges (SSRF), deny-listed or non-allow-listed domains, `file://` scheme | BLOCK |
 | **Prompt injection** | "ignore previous instructions", fake system markers, role overrides, markdown-image exfiltration, hidden zero-width characters | ASK / BLOCK |
 
@@ -142,7 +143,7 @@ url_policy:
 Security claims should be specific, so here is the exact boundary (full detail in [docs/THREAT_MODEL.md](docs/THREAT_MODEL.md)):
 
 **What ActionWall protects against**
-- Destructive filesystem operations — measured, not guessed: the firewall counts what a delete would actually remove
+- Destructive filesystem operations, measured not guessed: the firewall counts what a delete would actually remove
 - Reads/writes/deletes of protected paths (`.env`, SSH keys, `.git/**`, `/etc/**` …) and access outside the workspace
 - Dangerous shell patterns: pipe-to-shell, reverse shells, privilege escalation, fork bombs, raw device writes, obfuscated execution
 - Credentials leaving through tool arguments (signature + entropy detection, redacted everywhere)
@@ -151,10 +152,43 @@ Security claims should be specific, so here is the exact boundary (full detail i
 - Specific classes of prompt-injection-*induced* actions, and common injection patterns in tool output
 
 **What it does not protect against**
-- Every possible prompt-injection technique (paraphrased/multilingual attacks can pass heuristics — the action scanners are the hard control, not the text scanner)
-- A compromised host or agent runtime (pair with containers/OS sandboxing — ActionWall is a policy gate, not isolation)
+- Every possible prompt-injection technique (paraphrased/multilingual attacks can pass heuristics; the action scanners are the hard control, not the text scanner)
+- A compromised host or agent runtime (pair with containers/OS sandboxing; ActionWall is a policy gate, not isolation)
 - Vulnerabilities in your dependencies or in your own policy misconfiguration
 - TOCTOU races: ActionWall is a gate at decision time, not a transactional filesystem layer
+
+## Service mode
+
+Run the firewall as an HTTP service and check actions from any language, process, or machine:
+
+```bash
+actionwall serve --port 8080
+```
+
+```bash
+curl -s http://127.0.0.1:8080/v1/check \
+  -H "content-type: application/json" \
+  -d '{"tool":"shell","params":{"command":"rm -rf /project/*"}}'
+```
+
+The response carries the full Decision plus `x-actionwall-verdict` / `x-actionwall-risk` headers. One deployment can serve several teams or agents with **per-tenant policies**:
+
+```yaml
+# tenants.yaml
+tenants:
+  ci-bot: policies/strict.yaml
+  analyst: policies/readonly.yaml
+```
+
+```bash
+actionwall serve --tenants tenants.yaml --port 8080
+curl -s http://127.0.0.1:8080/v1/check \
+  -H "x-actionwall-tenant: analyst" \
+  -H "content-type: application/json" \
+  -d '{"tool":"shell","params":{"command":"ls"}}'
+```
+
+`GET /healthz` reports liveness and the running version. The server binds to `127.0.0.1` by default; pass `--host 0.0.0.0` inside containers. Built on Node's built-in `http` module, with no extra dependencies.
 
 ## Audit log
 
@@ -162,7 +196,7 @@ Every decision is appended to `.actionwall/audit/audit-YYYY-MM-DD.jsonl` as a **
 
 ```
 $ actionwall log --verify
-✓ Chain intact — 13 entries verified in .actionwall/audit/audit-2026-09-14.jsonl
+✓ Chain intact: 13 entries verified in .actionwall/audit/audit-2026-09-14.jsonl
 ```
 
 Secrets are redacted before anything hits disk.
@@ -174,7 +208,7 @@ Secrets are redacted before anything hits disk.
 | [docs/REQUIREMENTS.md](docs/REQUIREMENTS.md) | Functional & non-functional requirements (FR/NFR with acceptance criteria) |
 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | Pipeline design, scanner contract, design decisions, extension guide |
 | [docs/THREAT_MODEL.md](docs/THREAT_MODEL.md) | STRIDE analysis, OWASP LLM Top-10 mapping, what's out of scope |
-| [docs/COMPARISON.md](docs/COMPARISON.md) | Competitive landscape — how ActionWall differs from Llama Guard, NeMo Guardrails, Agent-Wall, sandboxes |
+| [docs/COMPARISON.md](docs/COMPARISON.md) | Competitive landscape: how ActionWall differs from Llama Guard, NeMo Guardrails, Agent-Wall, sandboxes |
 | [docs/POLICY_REFERENCE.md](docs/POLICY_REFERENCE.md) | Every policy field, with examples |
 | [docs/ROADMAP.md](docs/ROADMAP.md) | What's next (MCP proxy, ML classifier, approvals workflow…) |
 
@@ -196,11 +230,11 @@ policies/        default · strict · readonly
 
 | | |
 |---|---|
-| **Contributing** | [CONTRIBUTING.md](CONTRIBUTING.md) — dev setup, ground rules, and how to add a scanner |
-| **Security** | [SECURITY.md](SECURITY.md) — responsible disclosure (please don't open public issues for exploitable bypasses) |
-| **Changelog** | [CHANGELOG.md](CHANGELOG.md) — Keep-a-Changelog format |
-| **Roadmap** | [docs/ROADMAP.md](docs/ROADMAP.md) — HTTP service mode, MCP guard, ML classifier, approvals workflow |
+| **Contributing** | [CONTRIBUTING.md](CONTRIBUTING.md): dev setup, ground rules, and how to add a scanner |
+| **Security** | [SECURITY.md](SECURITY.md): responsible disclosure (please don't open public issues for exploitable bypasses) |
+| **Changelog** | [CHANGELOG.md](CHANGELOG.md): Keep-a-Changelog format |
+| **Roadmap** | [docs/ROADMAP.md](docs/ROADMAP.md): HTTP service mode, MCP guard, ML classifier, approvals workflow |
 
 ## License
 
-MIT — see [LICENSE](LICENSE).
+MIT. See [LICENSE](LICENSE).

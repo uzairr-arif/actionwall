@@ -26,3 +26,4 @@ export { urlPolicyScanner } from "./scanners/urlPolicy.js";
 export { injectionScanner } from "./scanners/injection.js";
 export { redactText } from "./util/secretPatterns.js";
 export { runDemo, demoSteps, setupSandbox, cleanupSandbox } from "./demo/mockAgent.js";
+export { createActionWallServer, loadTenantsFile, type ServeOptions } from "./server/serve.js";

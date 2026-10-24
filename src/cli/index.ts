@@ -6,20 +6,24 @@
  *   actionwall validate --policy policies/default.yaml
  *   actionwall log     [--last N] [--verify]   read / verify the audit trail
  *   actionwall demo    [--policy path]         scripted agent protected live
+ *   actionwall serve   [--port 8080]           run as an HTTP policy service
  *
  * Exit codes: 0 allowed · 1 blocked · 3 needs human approval · 2 error
  */
 
 import { Command } from "commander";
 import { existsSync } from "node:fs";
+import { createRequire } from "node:module";
 import * as path from "node:path";
 import { pathToFileURL } from "node:url";
 import { ShieldEngine, loadPolicy, makeAction, AuditLogger, type Action } from "../index.js";
+import { createActionWallServer, loadTenantsFile } from "../server/serve.js";
 import { formatDecision, formatAuditEntry } from "./format.js";
 import { runDemo } from "../demo/mockAgent.js";
-import { bold, dim, green, red } from "../util/ansi.js";
+import { bold, cyan, dim, green, red } from "../util/ansi.js";
 
-const VERSION = "0.1.0";
+const require = createRequire(import.meta.url);
+const { version: VERSION } = require("../../package.json") as { version: string };
 
 /** Policy resolution order: explicit flag > ./actionwall.yaml > ./policies/default.yaml > built-in. */
 function resolvePolicyPath(explicit?: string): string | undefined {
@@ -150,6 +154,29 @@ export async function runCli(argv: string[]): Promise<number> {
       console.log(dim("Every step is checked by the real engine with the real policy.\n"));
       const result = await runDemo({ policyPath: opts.policy, keepSandbox: opts.keepSandbox, print: (l) => console.log(l) });
       exitCode = result.blocked > 0 ? 1 : 0;
+    });
+
+  program
+    .command("serve")
+    .description("Run ActionWall as an HTTP policy service (POST /v1/check, GET /healthz)")
+    .option("--port <n>", "port to listen on", "8080")
+    .option("--host <address>", "address to bind (default 127.0.0.1; use 0.0.0.0 for containers)", "127.0.0.1")
+    .option("--policy <path>", "default policy file (default resolution applies)")
+    .option("--tenants <path>", "tenants file: YAML mapping tenant ids to policy files, optional `default` entry")
+    .action((opts) => {
+      const loaded = opts.tenants ? loadTenantsFile(opts.tenants) : { tenants: undefined, defaultPolicyPath: undefined };
+      const defaultPolicyPath = opts.policy ?? loaded.defaultPolicyPath ?? resolvePolicyPath();
+      const policy = loadPolicy(defaultPolicyPath);
+
+      const server = createActionWallServer({ policy, tenants: loaded.tenants });
+      server.listen(Number.parseInt(opts.port, 10), opts.host, () => {
+        const addr = server.address();
+        const shown = typeof addr === "object" && addr ? `${addr.address}:${addr.port}` : opts.port;
+        const tenantCount = Object.keys(loaded.tenants ?? {}).length;
+        console.log(bold(cyan(`ActionWall service v${VERSION}`)) + dim(` on http://${shown}`));
+        console.log(dim("  POST /v1/check   { tool, params, agentId?, context? }  →  { decision }"));
+        console.log(dim(`  GET  /healthz    ${tenantCount} tenant(s) loaded · default policy: ${defaultPolicyPath ?? "built-in"}`));
+      });
     });
 
   await program.parseAsync(argv, { from: "user" });

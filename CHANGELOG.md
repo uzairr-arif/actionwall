@@ -3,13 +3,23 @@
 All notable changes to this project are documented here.
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.2.0] - Unreleased
+
+### Added
+- HTTP service mode: `actionwall serve` exposes `POST /v1/check` (returns the full Decision, with `x-actionwall-verdict` / `x-actionwall-risk` response headers) and `GET /healthz`. Built on Node's built-in `http` module, with zero new dependencies.
+- Per-tenant policies: `--tenants tenants.yaml` maps tenant ids to policy files; requests select a tenant with the `x-actionwall-tenant` header. Unknown tenants are rejected with 400.
+- `createActionWallServer` and `loadTenantsFile` exported from the library entry point for custom embeddings.
+
+### Changed
+- CLI version is now read from package.json instead of a hard-coded constant.
+
 ## [0.1.1] - 2026-10-04
 
 ### Changed
 - `homepage` metadata points to the product landing page (https://uzairr-arif.github.io/actionwall/) instead of duplicating the repository URL.
-- commander updated to 15; dependency lockfile refreshed within semver ranges. Major bumps of typescript (7), vitest (5), zod (4) and @types/node (26) are deliberately held back for dedicated testing.
+- Dependency refresh: commander 15, zod 4, vitest 5, typescript 7 and @types/node 26, all verified against the full test suite.
 
-## [0.1.0] — 2026-09-14
+## [0.1.0] - 2026-09-14
 
 ### Added
 - Core decision engine: `(Action, Policy) → ALLOW / BLOCK / ASK_HUMAN` with severity aggregation and fail-closed defaults.
@@ -17,6 +27,6 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - YAML/JSON policy loader with zod validation and safe defaults; presets `default`, `strict`, `readonly`.
 - Tamper-evident audit log: daily JSONL files, SHA-256 hash chain, `--verify`, automatic secret redaction.
 - CLI: `check`, `validate`, `log`, `demo` with CI-friendly exit codes (0/1/3/2).
-- Scripted demo agent (`actionwall demo`) — 9 actions: 3 allowed, 1 escalated, 5 blocked.
+- Scripted demo agent (`actionwall demo`): 9 actions, 3 allowed, 1 escalated, 5 blocked.
 - 76 unit/integration tests (vitest); GitHub Actions CI on Node 20/22/24.
 - Documentation: README, REQUIREMENTS, ARCHITECTURE, THREAT_MODEL, POLICY_REFERENCE, COMPARISON, ROADMAP.

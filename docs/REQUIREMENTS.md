@@ -1,10 +1,10 @@
-# ActionWall — Requirements Specification
+# ActionWall: Requirements Specification
 
 Version 1.0 · Status: implemented (v0.1.1) · Identified functional and non-functional requirements, each with acceptance criteria mapped to the test suite.
 
 ## 1. Problem statement
 
-AI agents execute tools autonomously: shell commands, file writes, HTTP requests, third-party APIs. A compromised prompt (prompt injection), a hallucinated action, or a bug can cause irreversible damage — deleted files, leaked credentials, SSRF into cloud infrastructure. Existing safeguards (model guardrails, provider "safety" layers) are probabilistic and sit *inside* the model. There is no deterministic, auditable, policy-driven control point between the agent and its tools.
+AI agents execute tools autonomously: shell commands, file writes, HTTP requests, third-party APIs. A compromised prompt (prompt injection), a hallucinated action, or a bug can cause irreversible damage: deleted files, leaked credentials, SSRF into cloud infrastructure. Existing safeguards (model guardrails, provider "safety" layers) are probabilistic and sit *inside* the model. There is no deterministic, auditable, policy-driven control point between the agent and its tools.
 
 ## 2. Goals & non-goals
 
@@ -16,7 +16,7 @@ AI agents execute tools autonomously: shell commands, file writes, HTTP requests
 - G5: Zero network calls and zero command execution inside the firewall itself.
 
 **Non-goals (v1)**
-- Running as a network proxy (planned — see ROADMAP).
+- Running as a network proxy (planned, see ROADMAP).
 - Stopping a *determined* adversary with arbitrary obfuscated payloads; ActionWall raises the floor and adds auditability, it is not a sandbox (see THREAT_MODEL).
 - Replacing OS-level sandboxing (containers, users, seccomp). It complements them.
 
@@ -26,7 +26,7 @@ AI agents execute tools autonomously: shell commands, file writes, HTTP requests
 
 | ID | Requirement | Acceptance criteria |
 |---|---|---|
-| FR-1 | Engine accepts an Action `{tool, params, agentId, context}` and returns a Decision `{verdict, risk, findings[], summary, latencyMs}`. | `engine.test.ts` — clean action yields `ALLOW`, risk `LOW`, latency ≥ 0. |
+| FR-1 | Engine accepts an Action `{tool, params, agentId, context}` and returns a Decision `{verdict, risk, findings[], summary, latencyMs}`. | `engine.test.ts`: clean action yields `ALLOW`, risk `LOW`, latency ≥ 0. |
 | FR-2 | Verdicts are exactly `ALLOW`, `BLOCK`, `ASK_HUMAN`. | All tests assert one of three values. |
 | FR-3 | Severity levels are `LOW < MEDIUM < HIGH < CRITICAL`; the decision's risk is the worst finding. | FR-1 + scanner tests. |
 | FR-4 | Policy maps severities → verdicts (`risk_thresholds.block` / `.ask`). | `engine.test.ts` custom thresholds: HIGH→ASK when configured. |
@@ -39,9 +39,9 @@ AI agents execute tools autonomously: shell commands, file writes, HTTP requests
 |---|---|---|---|
 | FR-7 | toolPermissions | Allow/deny lists with `*` wildcards, global or per-agent; deny wins over allow; deny-by-default mode. | `toolPermissions.test.ts`. |
 | FR-8 | commandRisk | Tokenize shell commands (quote-aware, chain/pipeline aware) without executing; detect destructive FS ops, privilege escalation, pipe-to-shell, reverse shells, fork bombs, raw device writes, env dumps, obfuscation, custom regex patterns. | `commandRisk.test.ts` (13 cases). |
-| FR-9 | commandRisk | **Bulk-delete rule:** expand `rm` targets against the real filesystem (read-only) and block when the count exceeds `file_policy.max_bulk_delete`. | `commandRisk.test.ts` — 12 files with limit 10 → CRITICAL, evidence names the count. |
+| FR-9 | commandRisk | **Bulk-delete rule:** expand `rm` targets against the real filesystem (read-only) and block when the count exceeds `file_policy.max_bulk_delete`. | `commandRisk.test.ts`: 12 files with limit 10 → CRITICAL, evidence names the count. |
 | FR-10 | filePolicy | Protected-path rules (`deny` / `readonly` / `allow`, first match wins) applied to `file.*` tools **and** file-touching shell commands; workspace containment for reads/writes/deletes. | `filePolicy.test.ts`. |
-| FR-11 | secrets | Detect known credential formats + credential assignments (with placeholder filtering) + high-entropy tokens in tool args; never emit the raw secret in findings. | `secrets.test.ts` — AWS/GitHub/OpenAI/private-key/JWT cases; redaction assertions. |
+| FR-11 | secrets | Detect known credential formats + credential assignments (with placeholder filtering) + high-entropy tokens in tool args; never emit the raw secret in findings. | `secrets.test.ts`: AWS/GitHub/OpenAI/private-key/JWT cases; redaction assertions. |
 | FR-12 | urlPolicy | Scheme allowlist, domain allow/deny lists with wildcards, private-network & cloud-metadata SSRF guard; applies to web tools and to URLs inside shell commands. | `urlPolicy.test.ts`. |
 | FR-13 | injection | Heuristic detection of instruction overrides, fake system markers, prompt-extraction, markdown-image exfiltration, hidden characters, in `toolOutput` and `userPrompt`; N distinct patterns escalate MEDIUM→HIGH. | `injection.test.ts`. |
 
@@ -49,7 +49,7 @@ AI agents execute tools autonomously: shell commands, file writes, HTTP requests
 
 | ID | Requirement | Acceptance criteria |
 |---|---|---|
-| FR-14 | Every decision (including ALLOW, configurable) is appended to daily JSONL files with action params, verdict, risk, findings. | `cli.test.ts` — check writes to `.actionwall/audit/`. |
+| FR-14 | Every decision (including ALLOW, configurable) is appended to daily JSONL files with action params, verdict, risk, findings. | `cli.test.ts`: check writes to `.actionwall/audit/`. |
 | FR-15 | Records are hash-chained (SHA-256 over prev hash + record); `verify` re-walks the chain and pinpoints the first broken entry. | `audit.test.ts` + `cli.test.ts` tamper case. |
 | FR-16 | Secrets in logged params are redacted. | `audit.test.ts`. |
 
@@ -58,7 +58,7 @@ AI agents execute tools autonomously: shell commands, file writes, HTTP requests
 | ID | Requirement | Acceptance criteria |
 |---|---|---|
 | FR-17 | `check <command-or-json>` with `--tool/--params/--context/--agent/--policy/--json/--no-log`. | `cli.test.ts`. |
-| FR-18 | Exit codes: 0 allow, 1 block, 3 ask-human, 2 error — CI usable. | `cli.test.ts`. |
+| FR-18 | Exit codes: 0 allow, 1 block, 3 ask-human, 2 error. CI usable. | `cli.test.ts`. |
 | FR-19 | `validate`, `log [--last N] [--verify]`, `demo`. | `cli.test.ts`. |
 
 ## 4. Non-functional requirements
@@ -76,9 +76,9 @@ AI agents execute tools autonomously: shell commands, file writes, HTTP requests
 
 ## 5. Personas
 
-- **Agent developer** — integrates ActionWall into a tool loop; wants `guard()` and clear errors.
-- **Security/platform engineer** — writes policies and reviews the audit log; wants `validate` and `log --verify`.
-- **Operator/agent owner** — receives ASK_HUMAN escalations and approves or denies.
+- **Agent developer**: integrates ActionWall into a tool loop; wants `guard()` and clear errors.
+- **Security/platform engineer**: writes policies and reviews the audit log; wants `validate` and `log --verify`.
+- **Operator/agent owner**: receives ASK_HUMAN escalations and approves or denies.
 
 ## 6. Acceptance scenario (product pitch parity)
 
