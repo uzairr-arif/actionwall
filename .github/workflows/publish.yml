@@ -18,5 +18,10 @@ jobs:
         with:
           node-version: 24
           registry-url: https://registry.npmjs.org/
+      - name: Toolchain
+        run: |
+          node --version
+          npm --version
       - run: npm ci
-      - run: npm publish --provenance
+      - name: Publish
+        run: npm publish --provenance
