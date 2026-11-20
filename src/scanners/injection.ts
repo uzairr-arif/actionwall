@@ -14,6 +14,7 @@
 
 import type { Action, Finding, PolicyDoc, Scanner } from "../core/types.js";
 import { truncate } from "../util/secretPatterns.js";
+import { scanConfusables } from "../util/homoglyphs.js";
 
 interface InjectionPattern {
   id: string;
@@ -99,16 +100,35 @@ export const injectionScanner: Scanner = {
         hidden = true;
         hits.push({ id: "HIDDEN-CHARS", label: "hidden/invisible characters (zero-width or word-joiner)", snippet: "(invisible characters present)" });
       }
+
+      // Homoglyph evasion: words that mix Latin letters with lookalikes from
+      // other scripts (Cyrillic "а", Greek "ο"). Pure non-Latin text is fine.
+      const confusables = scanConfusables(text);
+      if (confusables.mixedScriptWordFound) {
+        hits.push({
+          id: "HOMOGLYPH",
+          label: `homoglyph lookalikes in mixed-script words (example: "${truncate(confusables.example ?? "", 40)}")`,
+          snippet: `(lookalike characters present, e.g. ${confusables.hits[0]!.latin})`,
+        });
+      }
+
       if (hits.length === 0) continue;
 
       const exfil = hits.some((h) => h.id === "EXFIL-IMAGE");
       const distinct = new Set(hits.map((h) => h.id)).size;
       const severity = exfil || distinct >= policy.injection.hits_for_high ? "HIGH" : "MEDIUM";
       const labels = hits.slice(0, 3).map((h) => h.label).join("; ");
+      const ruleId = exfil
+        ? "INJ-EXFIL-IMAGE"
+        : distinct >= policy.injection.hits_for_high
+          ? "INJ-MULTI-PATTERN"
+          : hits[0]!.id === "HOMOGLYPH"
+            ? "INJ-HOMOGLYPH"
+            : "INJ-SINGLE-PATTERN";
 
       findings.push({
         scanner: this.name,
-        ruleId: exfil ? "INJ-EXFIL-IMAGE" : distinct >= policy.injection.hits_for_high ? "INJ-MULTI-PATTERN" : "INJ-SINGLE-PATTERN",
+        ruleId,
         severity,
         title: exfil ? "Possible data exfiltration via markdown image" : "Possible prompt injection",
         reason:
