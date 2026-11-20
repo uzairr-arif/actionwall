@@ -16,6 +16,7 @@
 import { randomUUID } from "node:crypto";
 import { globToRegExp } from "../util/paths.js";
 import type { Action, Decision, Finding, RiskLevel, Scanner, Verdict } from "./types.js";
+import type { InjectionClassifier } from "../classifiers/injectionClassifier.js";
 import type { PolicyDoc } from "./types.js";
 import { AuditLogger } from "./audit.js";
 import { toolPermissionsScanner } from "../scanners/toolPermissions.js";
@@ -47,16 +48,21 @@ export interface ShieldEngineOptions {
   audit?: AuditLogger | false;
   /** Replace or extend the scanner set. */
   scanners?: Scanner[];
+  /** Optional pluggable injection classifier. The `injection.ml` policy
+   * section decides whether it runs, and in which mode. */
+  injectionClassifier?: InjectionClassifier;
 }
 
 export class ShieldEngine {
   readonly policy: PolicyDoc;
   readonly audit?: AuditLogger;
   private readonly scanners: Scanner[];
+  private readonly injectionClassifier?: InjectionClassifier;
 
   constructor(policy: PolicyDoc, options: ShieldEngineOptions = {}) {
     this.policy = policy;
     this.scanners = options.scanners ?? DEFAULT_SCANNERS;
+    this.injectionClassifier = options.injectionClassifier;
     if (policy.audit.enabled && options.audit !== false) {
       this.audit =
         options.audit ??
@@ -85,6 +91,33 @@ export class ShieldEngine {
     }
 
     const tuned = this.tuneFindings(findings);
+
+    // Pluggable classifier: runs on untrusted text when the policy enables
+    // it. Shadow mode records the score without touching the verdict;
+    // enforce mode adds a HIGH finding at or above the threshold.
+    let ml: Decision["ml"] | undefined;
+    const classifier = this.injectionClassifier;
+    if (classifier && this.policy.injection.ml.enabled) {
+      const text = [action.context?.toolOutput, action.context?.userPrompt]
+        .filter((x): x is string => Boolean(x && x.length > 0))
+        .join("\n");
+      if (text.length > 0) {
+        const score = classifier.score(text);
+        const { mode, threshold } = this.policy.injection.ml;
+        ml = { classifier: classifier.name, score: Math.round(score * 1000) / 1000, mode };
+        if (mode === "enforce" && score >= threshold) {
+          tuned.push({
+            scanner: "classifier",
+            ruleId: "INJ-ML",
+            severity: "HIGH",
+            title: "Injection classifier flagged the untrusted text",
+            reason: `The "${classifier.name}" classifier scored this context ${ml.score} against a threshold of ${threshold} (enforce mode).`,
+            policyRef: "injection.ml",
+          });
+        }
+      }
+    }
+
     const risk = maxSeverity(tuned);
     const verdict = this.verdictFor(risk);
     const decision: Decision = {
@@ -97,6 +130,7 @@ export class ShieldEngine {
       summary: headline(tuned, verdict),
       latencyMs: Math.round((performance.now() - started) * 100) / 100,
       timestamp,
+      ...(ml ? { ml } : {}),
     };
 
     if (this.audit && (verdict !== "ALLOW" || this.policy.audit.log_allowed)) {

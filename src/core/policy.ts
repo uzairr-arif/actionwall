@@ -104,6 +104,13 @@ export const policySchema = z.object({
     z.object({
       enabled: z.boolean().default(true),
       hits_for_high: z.number().int().min(1).default(2),
+      ml: section(
+        z.object({
+          enabled: z.boolean().default(false),
+          mode: z.enum(["shadow", "enforce"]).default("shadow"),
+          threshold: z.number().min(0).max(1).default(0.7),
+        })
+      ),
     })
   ),
   rules: section(

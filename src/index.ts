@@ -27,3 +27,5 @@ export { injectionScanner } from "./scanners/injection.js";
 export { redactText } from "./util/secretPatterns.js";
 export { runDemo, demoSteps, setupSandbox, cleanupSandbox } from "./demo/mockAgent.js";
 export { createActionWallServer, loadTenantsFile, type ServeOptions } from "./server/serve.js";
+export { KeywordBaselineClassifier, type InjectionClassifier } from "./classifiers/injectionClassifier.js";
+export { scanConfusables, type ConfusableScan } from "./util/homoglyphs.js";

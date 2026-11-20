@@ -85,6 +85,12 @@ export interface Decision {
   /** Wall-clock cost of the scan in milliseconds. */
   latencyMs: number;
   timestamp: string;
+  /** Present when a pluggable injection classifier ran for this action. */
+  ml?: {
+    classifier: string;
+    score: number;
+    mode: "shadow" | "enforce";
+  };
 }
 
 /** Contract every scanner implements. Scanners are pure: no I/O side effects
@@ -154,6 +160,14 @@ export interface PolicyDoc {
     enabled: boolean;
     /** Distinct patterns that must hit before severity escalates to HIGH. */
     hits_for_high: number;
+    /** Pluggable classifier control. The classifier itself is provided in
+     * code (ShieldEngine options); the policy decides if it runs and how. */
+    ml: {
+      enabled: boolean;
+      mode: "shadow" | "enforce";
+      /** Enforce mode adds a HIGH finding at or above this score. */
+      threshold: number;
+    };
   };
   /** Rule tuning: override finding severities and suppress specific rules
    * when their evidence matches an exception pattern. Protected rules
