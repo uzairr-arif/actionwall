@@ -3,10 +3,12 @@
 All notable changes to this project are documented here.
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
-## [0.3.0] - Unreleased
+## [0.3.0] - 2026-10-25
 
 ### Added
 - Rule tuning via the new `rules` policy section: `severities` overrides any rule's severity by ID (downgrades soften verdicts, upgrades harden them), and `exceptions` suppress a rule when its evidence matches a glob (for example, allow certificate reads for build agents). Protected rules are immune.
+- Homoglyph and mixed-script evasion detection: the injection scanner flags words mixing Latin letters with lookalike characters (Cyrillic, Greek, fullwidth). Pure non-Latin text never triggers.
+- Pluggable injection classifier with shadow and enforce modes: provide any scoring model through ShieldEngine options, and the `injection.ml` policy section decides whether it runs. Shadow records the score on the decision, enforce adds a HIGH finding at or above the threshold. A transparent keyword baseline ships as the reference classifier.
 
 ## [0.2.0] - 2026-10-24
 
