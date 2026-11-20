@@ -112,6 +112,30 @@ Built-in signatures: AWS access/secret keys, GitHub tokens, OpenAI/Anthropic key
 
 Scans `context.toolOutput` and `context.userPrompt`. Pattern families: instruction overrides, fake system markers, prompt-extraction requests, role overrides, urgent-execute directives, impersonated assistant turns, markdown-image exfiltration (⇒ HIGH immediately), hidden zero-width characters.
 
+## `rules`
+
+Tune individual scanner rules without touching scanner code. Both subsections are optional. Protected rules (`SCANNER-FAILURE`, `AUDIT-WRITE-FAILURE`) can never be tuned.
+
+| Field | Type | Default | Meaning |
+|---|---|---|---|
+| `severities` | map of ruleId to RiskLevel | `{}` | Override the severity of any finding by rule ID. Downgrades soften the verdict, upgrades harden it. |
+| `exceptions` | `{ruleId, matches, reason?}[]` | `[]` | Drop findings whose rule ID matches and whose evidence (the path or command text) matches the glob in `matches`. |
+
+```yaml
+rules:
+  severities:
+    CMD-WORLD-WRITABLE: MEDIUM   # world-writable files are acceptable here
+  exceptions:
+    - ruleId: FP-PROTECTED-READ
+      matches: "**/*.pem"
+      reason: build agents may read certificates
+    - ruleId: CMD-PRIVILEGE-ESCALATION
+      matches: "sudo systemctl restart *"
+      reason: ops runbook restarts
+```
+
+Exceptions are evidence-scoped: `.env` stays denied even when `**/*.pem` is excepted. The scanner-failure and audit-failure paths are always immune, so tuning can never disable the firewall's own failure reporting.
+
 ## `audit`
 
 | Field | Type | Default | Meaning |

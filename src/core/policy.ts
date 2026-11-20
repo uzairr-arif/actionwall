@@ -106,6 +106,23 @@ export const policySchema = z.object({
       hits_for_high: z.number().int().min(1).default(2),
     })
   ),
+  rules: section(
+    z.object({
+      /** ruleId → severity override (may not target protected rules). */
+      severities: z.record(z.string(), riskLevelSchema).default({}),
+      /** Findings whose ruleId matches and whose evidence matches the glob
+       * are dropped. Protected rules cannot be suppressed. */
+      exceptions: z
+        .array(
+          z.object({
+            ruleId: z.string().min(1),
+            matches: z.string().min(1),
+            reason: z.string().optional(),
+          })
+        )
+        .default([]),
+    })
+  ),
   audit: section(
     z.object({
       enabled: z.boolean().default(true),

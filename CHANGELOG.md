@@ -3,7 +3,12 @@
 All notable changes to this project are documented here.
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
-## [0.2.0] - Unreleased
+## [0.3.0] - Unreleased
+
+### Added
+- Rule tuning via the new `rules` policy section: `severities` overrides any rule's severity by ID (downgrades soften verdicts, upgrades harden them), and `exceptions` suppress a rule when its evidence matches a glob (for example, allow certificate reads for build agents). Protected rules are immune.
+
+## [0.2.0] - 2026-10-24
 
 ### Added
 - HTTP service mode: `actionwall serve` exposes `POST /v1/check` (returns the full Decision, with `x-actionwall-verdict` / `x-actionwall-risk` response headers) and `GET /healthz`. Built on Node's built-in `http` module, with zero new dependencies.

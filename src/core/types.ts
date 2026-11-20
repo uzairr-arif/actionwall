@@ -155,12 +155,31 @@ export interface PolicyDoc {
     /** Distinct patterns that must hit before severity escalates to HIGH. */
     hits_for_high: number;
   };
+  /** Rule tuning: override finding severities and suppress specific rules
+   * when their evidence matches an exception pattern. Protected rules
+   * (SCANNER-FAILURE, AUDIT-WRITE-FAILURE) cannot be tuned. */
+  rules: {
+    /** ruleId → severity override, e.g. { "CMD-WORLD-WRITABLE": "MEDIUM" }. */
+    severities: Record<string, RiskLevel>;
+    /** Findings whose ruleId and evidence match an exception are dropped. */
+    exceptions: RuleException[];
+  };
   audit: {
     enabled: boolean;
     log_dir: string;
     redact_secrets: boolean;
     log_allowed: boolean;
   };
+}
+
+/** Suppress one scanner rule when its evidence matches a glob pattern. */
+export interface RuleException {
+  /** The scanner rule to suppress, e.g. "FP-PROTECTED-READ". */
+  ruleId: string;
+  /** Glob matched against the finding's evidence (the path or command). */
+  matches: string;
+  /** Why this exception exists, for the audit trail. */
+  reason?: string;
 }
 
 export function maxSeverity(findings: Finding[]): RiskLevel {

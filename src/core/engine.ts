@@ -14,6 +14,7 @@
  */
 
 import { randomUUID } from "node:crypto";
+import { globToRegExp } from "../util/paths.js";
 import type { Action, Decision, Finding, RiskLevel, Scanner, Verdict } from "./types.js";
 import type { PolicyDoc } from "./types.js";
 import { AuditLogger } from "./audit.js";
@@ -83,7 +84,8 @@ export class ShieldEngine {
       }
     }
 
-    const risk = maxSeverity(findings);
+    const tuned = this.tuneFindings(findings);
+    const risk = maxSeverity(tuned);
     const verdict = this.verdictFor(risk);
     const decision: Decision = {
       actionId: action.id,
@@ -91,8 +93,8 @@ export class ShieldEngine {
       tool: action.tool,
       verdict,
       risk,
-      findings,
-      summary: headline(findings, verdict),
+      findings: tuned,
+      summary: headline(tuned, verdict),
       latencyMs: Math.round((performance.now() - started) * 100) / 100,
       timestamp,
     };
@@ -126,7 +128,37 @@ export class ShieldEngine {
     if (this.policy.risk_thresholds.ask.includes(risk)) return "ASK_HUMAN";
     return "ALLOW";
   }
+
+  /**
+   * Rule tuning (v0.3): drop findings matched by `rules.exceptions` and apply
+   * `rules.severities` overrides. Protected rules (scanner/audit failures)
+   * are immune, so tuning can never open the firewall's own failure path.
+   */
+  private tuneFindings(findings: Finding[]): Finding[] {
+    const rules = this.policy.rules;
+    if (rules.exceptions.length === 0 && Object.keys(rules.severities).length === 0) {
+      return findings;
+    }
+    return findings
+      .filter((f) => {
+        if (PROTECTED_RULE_IDS.has(f.ruleId)) return true;
+        return !rules.exceptions.some((e) => {
+          if (e.ruleId !== f.ruleId) return false;
+          const evidence = f.evidence ?? "";
+          return evidence.length > 0 && globToRegExp(e.matches).test(evidence);
+        });
+      })
+      .map((f) => {
+        const override = rules.severities[f.ruleId];
+        if (!override || PROTECTED_RULE_IDS.has(f.ruleId) || override === f.severity) return f;
+        return { ...f, severity: override };
+      });
+  }
 }
+
+/** Rule tuning can never touch the firewall's own failure reporting. */
+const PROTECTED_RULE_IDS = new Set(["SCANNER-FAILURE", "AUDIT-WRITE-FAILURE"]);
+
 
 function headline(findings: Finding[], verdict: Verdict): string {
   if (findings.length === 0) return "No policy violations detected";
